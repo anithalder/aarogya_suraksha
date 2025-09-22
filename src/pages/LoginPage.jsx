@@ -19,12 +19,13 @@ import {
     InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { HeartPulse, ArrowLeft } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useNavigate } from 'react-router-dom'; // Changed from 'wouter'
 
 export default function LoginPage() {
     const [step, setStep] = useState('phone'); // 'phone' or 'otp'
     const [phoneNumber, setPhoneNumber] = useState('');
     const [otp, setOtp] = useState('');
+    const navigate = useNavigate(); // Initialize useNavigate
 
     const handleSendOtp = (e) => {
         e.preventDefault();
@@ -33,7 +34,7 @@ export default function LoginPage() {
         if (phoneNumber.length === 10) {
             setStep('otp');
         } else {
-            alert('Please enter a valid 10-digit phone number.');
+            toast.error('Please enter a valid 10-digit phone number.');
         }
     };
 
@@ -44,6 +45,8 @@ export default function LoginPage() {
         if (otp.length === 6) {
             toast.success(`Logged in successfully with phone: ${phoneNumber}`);
             // Redirect to dashboard on successful login
+            // For now, redirecting to patient-dashboard as an example
+            navigate('/patient-dashboard'); 
         } else {
             toast.error('Please enter the 6-digit OTP.');
         }
@@ -139,13 +142,13 @@ export default function LoginPage() {
                                         </div>
                                     </CardContent>
                                     <CardFooter className="pt-6">
-                                        <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500 text-white font-bold py-2 rounded-lg shadow-md transition-all text-lg">Login</Button>
+                                        <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500 text-white font-bold py-2 rounded-lg shadow-md transition-all text-lg" onClick={handleLogin}>Login</Button>
                                     </CardFooter>
                                 </form>
                             )}
                         </Card>
                         <div className="text-center text-sm mt-6">
-                            <Link href="/" className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900 transition-colors font-medium">
+                            <Link to="/" className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900 transition-colors font-medium">
                                 <ArrowLeft className="w-4 h-4" />
                                 Return to Homepage
                             </Link>
@@ -157,4 +160,3 @@ export default function LoginPage() {
         </>
     );
 }
-

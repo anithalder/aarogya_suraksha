@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Shadcn UI Component Stubs - In a real project, these would be imported.
 // For this single-file component, we'll define simple functional components
@@ -74,29 +75,32 @@ export default function Home() {
 
 // Sub-components defined within the same file for simplicity
 
-const Header = () => (
-    <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-white via-blue-50 to-white/80 backdrop-blur-sm shadow-sm">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-            <a href="#" className="flex items-center gap-2">
-                {/* <Icon name="heartPulse" className="h-7 w-7 text-blue-600" /> */}
-                <img src="favicon.png" alt="ArogyaSuraksha Logo" className="h-8 w-8 object-contain" />
-                <span className="text-xl font-bold text-gray-900">ArogyaSuraksha</span>
-            </a>
-            <nav className="hidden items-center gap-6 md:flex">
-                <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">How it Works</a>
-                <a href="#features" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Features</a>
-                <a href="#doctors" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Find a Doctor</a>
-            </nav>
-            <div className="flex items-center gap-2">
-                <Button variant="ghost">Login</Button>
-                <Button className="bg-blue-600 text-white hover:bg-blue-700">Sign Up</Button>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                    <Icon name="menu" className="h-6 w-6" />
-                </Button>
+const Header = () => {
+    const navigate = useNavigate();
+    return (
+        <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-white via-blue-50 to-white/80 backdrop-blur-sm shadow-sm">
+            <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+                <a href="#" className="flex items-center gap-2">
+                    {/* <Icon name="heartPulse" className="h-7 w-7 text-blue-600" /> */}
+                    <img src="favicon.png" alt="ArogyaSuraksha Logo" className="h-8 w-8 object-contain" />
+                    <span className="text-xl font-bold text-gray-900">ArogyaSuraksha</span>
+                </a>
+                <nav className="hidden items-center gap-6 md:flex">
+                    <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">How it Works</a>
+                    <a href="#features" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Features</a>
+                    <a href="#doctors" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Find a Doctor</a>
+                </nav>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" onClick={() => navigate('/login')}>Login</Button>
+                    <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => navigate('/login')}>Sign Up</Button>
+                    <Button variant="ghost" size="icon" className="md:hidden">
+                        <Icon name="menu" className="h-6 w-6" />
+                    </Button>
+                </div>
             </div>
-        </div>
-    </header>
-);
+        </header>
+    );
+};
 
 const HeroSection = () => (
     <section className="bg-gradient-to-r from-blue-100 via-blue-50 to-white">
@@ -255,7 +259,7 @@ const TestimonialsSection = () => {
                     {testimonials.map((testimonial, index) => (
                         <Card key={index} className="flex flex-col">
                             <CardContent className="flex-grow pt-6">
-                                <p className="text-gray-700">"{testimonial.text}"</p>
+                                <p className="text-gray-700">\"{testimonial.text}\"</p>
                             </CardContent>
                             <CardFooter className="flex items-center justify-between bg-blue-100/50 p-4">
                                 <div>
