@@ -45,11 +45,16 @@
 // }
 
 import { Route, Routes } from "react-router-dom";
-import Home from "./pages/Home";
-import LoginPage from "./pages/LoginPage";
-import PatientDashboard from "./pages/PatientDashboard";
-import DoctorDashboard from "./pages/DoctorDashboard";
-import ConferenceRoom from "./pages/Room";
+import {
+  Home,
+  LoginPage,
+  PatientDashboard,
+  DoctorDashboard,
+  ConferenceRoom,
+  // AdminDashboard,
+  // PatientConference,
+  // DoctorConference,
+} from "./pages";
 
 function App() {
   return (
