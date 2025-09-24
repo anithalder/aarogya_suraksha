@@ -9,10 +9,19 @@ import VerifyPhone from './PatientVerify'; // ✅ imported component
 import { useNavigate } from 'react-router-dom';
 
 
-export default function LoginPage() {
-    const { backendUrl } = useContext(AppContext);
-    // console.log("Backend URL from context:", backendUrl);
+// --- (Bengali Comment) ---
+// Development-er jonno sample user data. Ekhane shob role-er user ache.
+// Backend ready hoar por ei section-ti comment out kore dilei hobe.
+const sampleUsers = [
+    { id: 101, full_name: "Aarav Singh (Patient)", phone: "9876543210", password: "hashed_password_101", role: "PATIENT" },
+    { id: 201, full_name: "Dr. Karan Malhotra (Doctor)", phone: "9876543220", password: "hashed_password_201", role: "DOCTOR" },
+    { id: 301, full_name: "Paramjit Saini (Pharmacy)", phone: "9876543225", password: "hashed_password_301", role: "PHARMACY_STAFF" },
+    { id: 401, full_name: "Usha Rani (Admin)", phone: "9876543229", password: "hashed_password_401", role: "ADMIN" }
+];
 
+
+export default function LoginPage() {
+    const { backendUrl, setUserData: setGlobalUserData, setIsLoggedIn } = useContext(AppContext);
     const navigate = useNavigate();
 
     const [mode, setMode] = useState('Login'); // 'Login' or 'Sign Up'
@@ -21,25 +30,41 @@ export default function LoginPage() {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [otp, setOtp] = useState('');
-    const [userData, setUserData] = useState(null);
+    const [currentUser, setCurrentUser] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // --- (Bengali Comment) ---
+        // Prothome hardcoded sample user check kora hocche.
+        const hardcodedUser = sampleUsers.find(user => user.phone === phone);
+
+        if (hardcodedUser && mode === 'Login') {
+            toast.success(`Welcome back, ${hardcodedUser.full_name}!`);
+            setCurrentUser(hardcodedUser);
+            setIsLoggedIn(true);
+            setGlobalUserData(hardcodedUser);
+            setStep('success');
+            return; // Hardcoded user peye gele ar API call korar dorkar nei.
+        }
+
+        // --- (Bengali Comment) ---
+        // Jodi hardcoded user na paoa jay, tahole API call kora hobe.
+        // Ei 'try-catch' block-ti backend chalu thaklei kaj korbe.
         try {
             if (mode === 'Sign Up') {
-                const userData = await axios.get(`${backendUrl}/users?phone=${phone}`);
-                console.log("User Data:", userData);
-                if (userData.length > 0) {
+                const { data: existingUsers } = await axios.get(`${backendUrl}/users?phone=${phone}`);
+                if (existingUsers.length > 0) {
                     toast.error('A user with this number already exists. Please log in.');
                     return;
                 }
-                toast.success('OTP sent to your mobile number!');
+                toast.info('OTP has been sent to your mobile number!');
                 setStep('verify');
             } else {
-                const userData = await axios.get(`${backendUrl}/users?phone=${phone}`);
-                console.log("User Data:", userData);
-                if (userData != null) {
-                    toast.success('OTP sent for verification!');
+                const { data: users } = await axios.get(`${backendUrl}/users?phone=${phone}`);
+                if (users && users.length > 0) {
+                    setCurrentUser(users[0]);
+                    toast.info('OTP sent for verification!');
                     setStep('verify');
                 } else {
                     toast.error('No account found with this number. Please sign up.');
@@ -47,23 +72,25 @@ export default function LoginPage() {
             }
         } catch (error) {
             console.error("API Error:", error);
-            toast.error('Failed to connect to the server.');
+            toast.error('Failed to connect to the server. Please check if the backend is running.');
         }
     };
 
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
         try {
-            const otpData = await axios.get(
+            // NOTE: OTP verification is mocked for hardcoded users.
+            // For API flow, this should check against the backend.
+            const { data: otpData } = await axios.get(
                 `${backendUrl}/otps?phone=${phone}&otp_code=${otp}`
             );
-            console.log("OTP Data:", otpData);
-            if (otpData != null) {
+
+            if (otpData && otpData.length > 0) {
                 if (mode === 'Sign Up') {
                     const newUserResponse = await axios.post(`${backendUrl}/users`, {
                         full_name: name,
                         phone: phone,
-                        password: password,
+                        password: password, // In a real app, ALWAYS hash this
                         role: 'PATIENT',
                     });
                     await axios.post(`${backendUrl}/patients`, {
@@ -74,13 +101,16 @@ export default function LoginPage() {
                     toast.success('Account created successfully!');
                 }
 
-                const { data: users } = await axios.get(
-                    `${backendUrl}/users?phone=${phone}`
-                );
-                const currentUser = users[0];
-                setUserData(currentUser);
+                // Fetch the user data again to be sure
+                const { data: users } = await axios.get(`${backendUrl}/users?phone=${phone}`);
+                const userToLogin = users[0];
+
+                setCurrentUser(userToLogin);
+                setGlobalUserData(userToLogin);
+                setIsLoggedIn(true);
                 toast.success('Login successful!');
                 setStep('success');
+
             } else {
                 toast.error('Invalid OTP. Please try again.');
             }
@@ -92,30 +122,33 @@ export default function LoginPage() {
 
     const handleResendOtp = () => {
         toast.success('A new OTP has been sent!');
+        // Add API call logic here if needed
     };
 
-    // ⏳ Auto-redirect after success
+    // Auto-redirect after success
     useEffect(() => {
-        if (step === 'success' && userData) {
+        if (step === 'success' && currentUser) {
             const timer = setTimeout(() => {
-                switch (userData.role) {
+                switch (currentUser.role) {
                     case 'DOCTOR':
-                        window.location.href = '/doctor-dashboard';
+                        navigate('/doctor-dashboard');
                         break;
                     case 'ADMIN':
-                        window.location.href = '/admin';
+                        // Assuming you have an admin dashboard route
+                        navigate('/admin-dashboard');
                         break;
                     case 'PHARMACY_STAFF':
-                        window.location.href = '/pharmacy';
+                        // Assuming you have a pharmacy dashboard route
+                        navigate('/pharmacy-dashboard');
                         break;
                     default:
                         navigate('/patient-dashboard');
                         break;
                 }
-            });   // 50 seconds delay
+            }, 2000); // 2-second delay for the user to see the success message
             return () => clearTimeout(timer);
         }
-    }, [step, userData]);
+    }, [step, currentUser, navigate]);
 
     return (
         <>
@@ -124,7 +157,9 @@ export default function LoginPage() {
                 <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-10">
                     <div className="text-center">
                         <img
-                            src="https://placehold.co/600x400/E9F5FF/3B82F6?text=Health+for+Every+Village"
+                            src="Health for Every Village.png"
+                            // width={600}
+                            // height={200}
                             alt="Illustration of rural healthcare"
                             className="rounded-2xl shadow-2xl mb-8 border-4 border-blue-200"
                         />
@@ -211,7 +246,7 @@ export default function LoginPage() {
                                     type="submit"
                                     className="w-full py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500 text-white font-bold shadow-md transition-all"
                                 >
-                                    {mode === 'Login' ? 'Send OTP to Login' : 'Send OTP to Sign Up'}
+                                    {mode === 'Login' ? 'Login' : 'Send OTP to Sign Up'}
                                 </button>
                             </form>
                         )}
@@ -266,14 +301,13 @@ export default function LoginPage() {
                                     </span>
                                 </p>
                             )}
-                            <a
-                                href="#"
-                                onClick={(e) => e.preventDefault()}
+                            <button
+                                onClick={() => navigate('/')}
                                 className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900 transition-colors font-medium"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 Return to Homepage
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>

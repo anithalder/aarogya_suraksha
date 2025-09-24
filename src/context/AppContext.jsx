@@ -1,5 +1,6 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+
+
 /* eslint-disable react-refresh/only-export-components */
 // import { data } from "autoprefixer";
 import axios from "axios";
@@ -17,17 +18,17 @@ export const AppContextProvider = (props) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [userData, setUserData] = useState(null)
 
-    // const getAuthState = async () => {
-    //     try {
-    //         const { data } = await axios.get(backendUrl + '/api/auth/is-auth')
-    //         if (data.success) {
-    //             setIsLoggedIn(true)
-    //             getUserData()
-    //         }
-    //     } catch (error) {
-    //         toast.error(error.message)
-    //     }
-    // }
+    const getAuthState = async () => {
+        try {
+            const { data } = await axios.get(backendUrl + '/api/auth/is-auth')
+            if (data.success) {
+                setIsLoggedIn(true)
+                getUserData()
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
 
     const getUserData = async () => {
         try {

@@ -1,0 +1,159 @@
+//// ------------------------------------------------------
+//// Telemedicine System Schema (DBML)
+////
+//// This schema is divided into two logical databases:
+//// 1. Primary DB: Handles users, appointments, and EHR.
+//// 2. Pharmacy DB: Handles inventory and order fulfillment.
+//// ------------------------------------------------------
+
+
+// Enum Definitions
+Enum user_role {
+  patient
+  doctor
+  pharmacy
+  admin
+}
+
+Enum appointment_status {
+  scheduled
+  completed
+  cancelled
+}
+
+Enum consultation_type {
+  video
+  audio
+  chat
+}
+
+Enum order_status {
+  pending
+  completed
+  cancelled
+}
+
+
+//// -----------------------------------------
+////   🏥 PRIMARY DB
+////   Core user and health record management
+//// -----------------------------------------
+
+Table users {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  email varchar [unique, not null]
+  password_hash varchar [not null]
+  phone_number varchar [unique]
+  role user_role [not null]
+  is_verified boolean [default: false]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  deleted_at timestamptz [note: 'For soft deletes']
+}
+
+Table patients {
+  user_id uuid [pk, ref: > users.id]
+  first_name varchar [not null]
+  last_name varchar [not null]
+  date_of_birth date [not null]
+  gender varchar
+  address_encrypted text [note: 'AES Encrypted JSON object for address']
+  profile_picture_url varchar
+}
+
+Table doctors {
+  user_id uuid [pk, ref: > users.id]
+  first_name varchar [not null]
+  last_name varchar [not null]
+  specialization varchar
+  license_number varchar [unique, not null]
+  consultation_fee decimal
+  is_approved boolean [default: false, note: 'Admin must approve']
+  profile_picture_url varchar
+}
+
+Table appointments {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  patient_id uuid [not null, ref: > patients.user_id]
+  doctor_id uuid [not null, ref: > doctors.user_id]
+  appointment_time timestamptz [not null]
+  status appointment_status [default: 'scheduled']
+  consultation_type consultation_type
+}
+
+Table consultations {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  appointment_id uuid [unique, not null, ref: > appointments.id]
+  symptoms_encrypted text [note: 'AES Encrypted']
+  diagnosis_encrypted text [note: 'AES Encrypted']
+  notes_encrypted text [note: 'AES Encrypted']
+}
+
+Table prescriptions {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  consultation_id uuid [not null, ref: > consultations.id]
+  patient_id uuid [not null, ref: > patients.user_id]
+  doctor_id uuid [not null, ref: > doctors.user_id]
+  issue_date timestamptz [default: `now()`]
+}
+
+
+//// -----------------------------------------
+////   💊 PHARMACY DB
+////   Inventory and order fulfillment
+//// -----------------------------------------
+
+Table pharmacies {
+  user_id uuid [pk, note: 'This is a Foreign Key to users.id in the Primary DB']
+  name varchar [not null]
+  address varchar [not null]
+  license_number varchar [unique, not null]
+  is_approved boolean [default: false, note: 'Admin must approve']
+  
+  // Logical cross-database relationship
+  // Ref: user_id > users.id
+}
+
+Table medicines {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  brand_name varchar [not null]
+  generic_name varchar [not null]
+  strength varchar [note: 'e.g., 500mg']
+  form varchar [note: 'e.g., Tablet, Syrup']
+  manufacturer varchar
+}
+
+Table pharmacy_inventory {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  pharmacy_id uuid [not null, ref: > pharmacies.user_id]
+  medicine_id uuid [not null, ref: > medicines.id]
+  stock_quantity integer [not null, default: 0]
+  unit_price decimal [not null]
+  expiry_date date
+}
+
+Table prescription_medicines {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  prescription_id uuid [not null, note: 'Foreign key to prescriptions.id in Primary DB']
+  medicine_id uuid [not null, ref: > medicines.id]
+  dosage varchar [not null, note: 'e.g., 1-0-1 after food']
+  duration_days integer [not null]
+  quantity integer [not null]
+  
+  // Logical cross-database relationship
+  // Ref: prescription_id > prescriptions.id
+}
+
+Table orders {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  prescription_id uuid [not null, note: 'Foreign key to prescriptions.id in Primary DB']
+  patient_id uuid [not null, note: 'Foreign key to patients.user_id in Primary DB']
+  pharmacy_id uuid [not null, ref: > pharmacies.user_id]
+  status order_status [default: 'pending']
+  total_amount decimal
+  order_date timestamptz [default: `now()`]
+  
+  // Logical cross-database relationships
+  // Ref: prescription_id > prescriptions.id
+  // Ref: patient_id > patients.user_id
+}
