@@ -53,7 +53,7 @@ export const Header = () => {
                 </nav>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" onClick={() => navigate('/login')}>Login</Button>
-                    <Button className="bg-blue-600 text-white hover:bg-blue-700">Sign Up</Button>
+                    <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => navigate('/login')}>Register</Button>
                     <Button variant="ghost" size="icon" className="md:hidden">
                         <Icon name="menu" className="h-6 w-6" />
                     </Button>

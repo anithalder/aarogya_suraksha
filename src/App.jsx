@@ -55,6 +55,7 @@ import {
   // PatientConference,
   // DoctorConference,
 } from "./pages";
+import VerifyPhone from "./pages/PatientVerify";
 
 function App() {
   return (
@@ -64,6 +65,7 @@ function App() {
       <Route path="/patient-dashboard" element={<PatientDashboard />} />
       <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
       <Route path="/room" element={<ConferenceRoom />} />
+      <Route path="*" element={<VerifyPhone />} />
       {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
       {/* <Route path="/patient/conference" element={<PatientConference />} /> */}
       {/* <Route path="/doctor/conference" element={<DoctorConference />} /> */}
